@@ -17,6 +17,9 @@ def conv2d_forward(input, W, b, kernel_size, pad):
     n = input.shape[0]
     c_out = W.shape[0]
 
+#    print input.shape, W.shape, kernel_size
+#    print len(W) , '=', len(b)
+
     input = np.pad(input,((0,0),(0,0),(pad,pad),(pad,pad)),'constant')
 
     col_A, h_out, w_out = im2col_A(input, kernel_size)
@@ -40,7 +43,26 @@ def conv2d_backward(input, grad_output, W, b, kernel_size, pad):
         grad_W: gradient of W, shape = c_out (#output channel) x c_in (#input channel) x k (#kernel_size) x k (#kernel_size)
         grad_b: gradient of b, shape = c_out
     '''
-    pass
+#    print 'W:',W.shape
+#    print 'g_out:',grad_output.shape
+
+    c_in = W.shape[1]
+    c_out = W.shape[0]
+    w_out = grad_output.shape[3]
+
+    grad_input = conv2d_forward(grad_output, np.rot90(W.transpose((1,0,2,3)), 2, (2,3)), np.zeros(c_in), kernel_size, kernel_size - 1)
+    if(pad > 0):
+        grad_input = grad_input[:,:, pad:-pad, pad:-pad]
+#    print 'g_in:',grad_input.shape
+#    print 'input:',input.shape
+
+    grad_W = conv2d_forward(input.transpose((1,0,2,3)),grad_output.transpose((1,0,2,3)), np.zeros(c_out), w_out , 0).transpose(1,0,2,3) 
+    # NOTE:Only for  h_out = w_out. It's enough for this Homework.
+    grad_b = grad_output.sum(axis=(0,2,3))
+
+    return grad_input, grad_W, grad_b
+
+
 
 
 def avgpool2d_forward(input, kernel_size, pad):
@@ -67,9 +89,6 @@ def avgpool2d_forward(input, kernel_size, pad):
     return col_A.mean(2).reshape(n,c_in,h_out,w_out)
     
 
-
-
-
 def avgpool2d_backward(input, grad_output, kernel_size, pad):
     '''
     Args:
@@ -81,8 +100,11 @@ def avgpool2d_backward(input, grad_output, kernel_size, pad):
     Returns:
         grad_input: gradient of input, shape = n (#sample) x c_in (#input channel) x h_in (#height) x w_in (#width)
     '''
-    grad_i = grad_output.repeat(kernel_size,2).repeat(kernel_size,3) / (kernel_size * kernel_size)
-    return grad_i[:, :, pad : -pad, pad : -pad]  
+    grad_in = grad_output.repeat(kernel_size,2).repeat(kernel_size,3) / (kernel_size * kernel_size)
+#    print 'pooling_back:',grad_in.shape
+    if(pad > 0):
+        grad_in = grad_i[:, :, pad : -pad, pad : -pad] 
+    return grad_in
     
     
 def im2col_A(A, k_size, stride=1):
@@ -110,8 +132,9 @@ def im2col_K(K, k_size):
 
     for i in xrange(c_out):
         for j in xrange(c_in):
-            R[j * k2:(j+1) * k2, i] = K[i][j].ravel()[::-1].T
+            R[j * k2:(j+1) * k2, i] = K[i][j].ravel().T #[::-1].T
     return R
+
 
 '''
 # n = 3,c_in = 2, h_in = h_out = 4
@@ -123,7 +146,10 @@ input = np.reshape(range(1,97),(3,2,4,4))
 W =  np.reshape(range(1,25),(3,2,2,2));
 b = np.ones(3);
 
-print conv2d_forward(input,W,b,2,1)
-print avgpool2d_forward(input,3,1)
+print input
+
+out =  conv2d_forward(input, W, b, 2, 1)
+conv2d_backward(input, out, W, b, 2, 1)
+#print avgpool2d_forward(input,3,1)
 '''
 

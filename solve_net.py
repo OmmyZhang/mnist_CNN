@@ -30,9 +30,9 @@ def train_net(model, loss, config, inputs, labels, batch_size, disp_freq):
         grad = loss.backward(output, target)
         # backward gradient
 
-#        model.backward(grad)
+        model.backward(grad)
         # update layers' weights
-#        model.update(config)
+        model.update(config)
 
         acc_value = calculate_acc(output, label)
         loss_list.append(loss_value)

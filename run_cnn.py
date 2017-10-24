@@ -10,10 +10,10 @@ train_data, test_data, train_label, test_label = load_mnist_4d('data')
 # Your model defintion here
 # You should explore different model architecture
 model = Network()
-model.add(Conv2D('conv1', 1, 4, 3, 1, 0.01))
+model.add(Conv2D('conv1', 1, 4, 3, 1, 1))
 model.add(Relu('relu1'))
 model.add(AvgPool2D('pool1', 2, 0))  # output shape: N x 4 x 14 x 14
-model.add(Conv2D('conv2', 4, 4, 3, 1, 0.01))
+model.add(Conv2D('conv2', 4, 4, 3, 1, 1))
 model.add(Relu('relu2'))
 model.add(AvgPool2D('pool2', 2, 0))  # output shape: N x 4 x 7 x 7
 model.add(Reshape('flatten', (-1, 196)))
@@ -28,8 +28,8 @@ loss = SoftmaxCrossEntropyLoss(name='loss')
 #       'disp_freq' denotes number of iterations in one epoch to display information.
 
 config = {
-    'learning_rate': 1e-3,
-    'weight_decay': 1e-3,
+    'learning_rate': 0.01,
+    'weight_decay': 0,
     'momentum': 0.99,
     'batch_size': 100,
     'max_epoch': 100,

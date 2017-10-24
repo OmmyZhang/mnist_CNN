@@ -1,6 +1,5 @@
 import numpy as np
 
-
 def conv2d_forward(input, W, b, kernel_size, pad):
     '''
     Args:
@@ -14,6 +13,9 @@ def conv2d_forward(input, W, b, kernel_size, pad):
         output: shape = n (#sample) x c_out (#output channel) x h_out x w_out,
             where h_out, w_out is the height and width of output, after convolution
     '''
+#    print 'f:',input.shape
+
+
     n = input.shape[0]
     c_out = W.shape[0]
 
@@ -49,20 +51,19 @@ def conv2d_backward(input, grad_output, W, b, kernel_size, pad):
     c_in = W.shape[1]
     c_out = W.shape[0]
     w_out = grad_output.shape[3]
-
+    
+    input = np.pad(input,((0,0),(0,0),(pad,pad),(pad,pad)),'constant')
+    
     grad_input = conv2d_forward(grad_output, np.rot90(W.transpose((1,0,2,3)), 2, (2,3)), np.zeros(c_in), kernel_size, kernel_size - 1)
+
     if(pad > 0):
         grad_input = grad_input[:,:, pad:-pad, pad:-pad]
-#    print 'g_in:',grad_input.shape
-#    print 'input:',input.shape
 
     grad_W = conv2d_forward(input.transpose((1,0,2,3)),grad_output.transpose((1,0,2,3)), np.zeros(c_out), w_out , 0).transpose(1,0,2,3) 
     # NOTE:Only for  h_out = w_out. It's enough for this Homework.
     grad_b = grad_output.sum(axis=(0,2,3))
 
     return grad_input, grad_W, grad_b
-
-
 
 
 def avgpool2d_forward(input, kernel_size, pad):
@@ -103,7 +104,7 @@ def avgpool2d_backward(input, grad_output, kernel_size, pad):
     grad_in = grad_output.repeat(kernel_size,2).repeat(kernel_size,3) / (kernel_size * kernel_size)
 #    print 'pooling_back:',grad_in.shape
     if(pad > 0):
-        grad_in = grad_i[:, :, pad : -pad, pad : -pad] 
+        grad_in = grad_in[:, :, pad : -pad, pad : -pad] 
     return grad_in
     
     
@@ -151,5 +152,13 @@ print input
 out =  conv2d_forward(input, W, b, 2, 1)
 conv2d_backward(input, out, W, b, 2, 1)
 #print avgpool2d_forward(input,3,1)
-'''
 
+
+inp = np.reshape(range(36),(1,1,6,6))
+W = np.reshape([0,0,-1,1,-1,1,-1,1,1],(1,1,3,3))
+g_o = np.reshape([0,0,1,2,2,2,0,0,2,1,2,2,3,0,1,1],(1,1,4,4))
+k_s = 3
+
+g_i, g_w, g_b = conv2d_backward(inp, g_o, W, np.arange(1), k_s, 0)
+print g_i
+'''
